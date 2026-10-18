@@ -41,7 +41,7 @@ jobs:
           cosign-release: v3.1.3
       - name: Install MageLift
         env:
-          MAGELIFT_VERSION: v0.0.0-canary.2e75d313b03d53dd7cfe694297032bf8d69cc2ed
+          MAGELIFT_VERSION: v0.0.0-canary.f2da15a5ea059a3fe6a6992cc35d60f8ca01a810
         run: |
           set -eu
           archive="magelift_${MAGELIFT_VERSION#v}_linux_amd64.tar.gz"
@@ -94,6 +94,9 @@ jobs:
               raise SystemExit("MAGELIFT_ACCEPTANCE_CONFIG is required for acceptance")
           Path("magelift.acceptance.yaml").write_text(value)
           PY_CONFIG
+      - uses: docker/setup-docker-action@2bf61fb9464cc67f0cbdeabed6aa0380accd1c70 # v5.5.0
+        with:
+          version: v29.9.1
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         with:
           version: v0.38.0
@@ -193,7 +196,7 @@ jobs:
           password: ${{ secrets.MAGELIFT_REGISTRY_PASSWORD }}
       - name: Install MageLift
         env:
-          MAGELIFT_VERSION: v0.0.0-canary.2e75d313b03d53dd7cfe694297032bf8d69cc2ed
+          MAGELIFT_VERSION: v0.0.0-canary.f2da15a5ea059a3fe6a6992cc35d60f8ca01a810
         run: |
           set -eu
           archive="magelift_${MAGELIFT_VERSION#v}_linux_amd64.tar.gz"
@@ -224,15 +227,16 @@ jobs:
               image="$image:$GITHUB_SHA"
               ;;
           esac
-          mkdir -p "$RUNNER_TEMP/magelift-build"
-          result="$RUNNER_TEMP/magelift-build/build-result.json"
+          build_dir="$RUNNER_TEMP/magelift-build"
+          result="$build_dir/build-result.json"
+          mkdir -p "$build_dir"
           magelift --config 'magelift.acceptance.yaml' --no-interaction --output json build --push \
             --image "$image" > "$result"
           digest="$(jq -er '.image | (.imageReference | sub(":[^/:]+$"; "")) + "@" + .digest' "$result")"
-          cp -- "$(jq -er '.manifest' "$result")" "$RUNNER_TEMP/magelift-build/manifest.json"
+          cp -- "$(jq -er '.manifest' "$result")" "$build_dir/manifest.json"
           checksum="$(jq -er '.manifestSha256 | select(test("^[a-f0-9]{64}$"))' "$result")"
-          printf '%s  manifest.json\n' "$checksum" > "$RUNNER_TEMP/magelift-build/manifest.sha256"
-          (cd "$RUNNER_TEMP/magelift-build" && sha256sum -c manifest.sha256)
+          printf '%s  manifest.json\n' "$checksum" > "$build_dir/manifest.sha256"
+          (cd "$build_dir" && sha256sum -c manifest.sha256)
           printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
       - name: Retain existing artifact manifest
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -278,7 +282,7 @@ jobs:
           cosign-release: v3.1.3
       - name: Install MageLift
         env:
-          MAGELIFT_VERSION: v0.0.0-canary.2e75d313b03d53dd7cfe694297032bf8d69cc2ed
+          MAGELIFT_VERSION: v0.0.0-canary.f2da15a5ea059a3fe6a6992cc35d60f8ca01a810
         run: |
           set -eu
           archive="magelift_${MAGELIFT_VERSION#v}_linux_amd64.tar.gz"
@@ -372,20 +376,4 @@ jobs:
       - name: Deploy immutable digest
         env:
           DIGEST: ${{ needs.build.outputs.digest }}
-        run: |
-          python3 - <<'PY_DIGEST'
-          import json, os, re
-          from pathlib import Path
-          digest = os.environ["DIGEST"]
-          if not re.fullmatch(r"[^@\s]+@sha256:[a-f0-9]{64}", digest):
-              raise SystemExit("immutable digest is required")
-          path = Path("magelift.acceptance.yaml")
-          value = path.read_text()
-          anchor = "  gcp:\n"
-          if value.count(anchor) != 1 or "    imageDigest:" in value:
-              raise SystemExit("unexpected acceptance GCP configuration")
-          # This canary plans before applying --digest. Pin the existing target field first.
-          value = value.replace(anchor, anchor + "    imageDigest: " + json.dumps(digest) + "\n", 1)
-          path.write_text(value)
-          PY_DIGEST
-          magelift --config 'magelift.acceptance.yaml' --env test --no-interaction --yes deploy --digest "$DIGEST"
+        run: magelift --config 'magelift.acceptance.yaml' --env test --no-interaction --yes deploy --digest "$DIGEST"
