@@ -4,14 +4,14 @@
   "providers": {
     "gcp": {
       "name": "magelift-provider-gcp",
-      "version": "v0.0.0-canary.f6cd96a59a1cfcd0a89ce505c4fd0bda2d448077",
+      "version": "v0.0.0-canary.1d1d1f23890c0d4843e0b368e7ade066fcef475f",
       "protocol": "magelift-v1",
-      "digest": "sha256:c7842f7ca52318e45a34946716f25801c8e3b1b408c0a1978eea6562b334d563",
-      "url": "https://github.com/magelift/magelift/releases/download/v0.0.0-canary.f6cd96a59a1cfcd0a89ce505c4fd0bda2d448077/magelift-provider-gcp_0.0.0-canary.f6cd96a59a1cfcd0a89ce505c4fd0bda2d448077_linux_amd64",
+      "digest": "sha256:78e1b6c0d0a69bac15749f4b46eead5ebb218b6dabce04b426675597d76fbc94",
+      "url": "https://github.com/magelift/magelift/releases/download/v0.0.0-canary.1d1d1f23890c0d4843e0b368e7ade066fcef475f/magelift-provider-gcp_0.0.0-canary.1d1d1f23890c0d4843e0b368e7ade066fcef475f_linux_amd64",
       "cosign": {
-        "identity": "https://github.com/magelift/magelift/.github/workflows/release.yml@refs/tags/v0.0.0-canary.f6cd96a59a1cfcd0a89ce505c4fd0bda2d448077",
+        "identity": "https://github.com/magelift/magelift/.github/workflows/release.yml@refs/tags/v0.0.0-canary.1d1d1f23890c0d4843e0b368e7ade066fcef475f",
         "issuer": "https://token.actions.githubusercontent.com",
-        "bundle": "https://github.com/magelift/magelift/releases/download/v0.0.0-canary.f6cd96a59a1cfcd0a89ce505c4fd0bda2d448077/magelift-provider-gcp_0.0.0-canary.f6cd96a59a1cfcd0a89ce505c4fd0bda2d448077_linux_amd64.sigstore.json"
+        "bundle": "https://github.com/magelift/magelift/releases/download/v0.0.0-canary.1d1d1f23890c0d4843e0b368e7ade066fcef475f/magelift-provider-gcp_0.0.0-canary.1d1d1f23890c0d4843e0b368e7ade066fcef475f_linux_amd64.sigstore.json"
       }
     }
   }
