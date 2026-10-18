@@ -41,7 +41,7 @@ jobs:
           cosign-release: v3.1.3
       - name: Install MageLift
         env:
-          MAGELIFT_VERSION: v0.0.0-canary.3659aa34533066b37d5bbd5a49b77bd083723647
+          MAGELIFT_VERSION: v0.0.0-canary.94a9c57f04eddca08bba09611e7e2e0ec3584c96
         run: |
           set -eu
           archive="magelift_${MAGELIFT_VERSION#v}_linux_amd64.tar.gz"
@@ -196,7 +196,7 @@ jobs:
           password: ${{ secrets.MAGELIFT_REGISTRY_PASSWORD }}
       - name: Install MageLift
         env:
-          MAGELIFT_VERSION: v0.0.0-canary.3659aa34533066b37d5bbd5a49b77bd083723647
+          MAGELIFT_VERSION: v0.0.0-canary.94a9c57f04eddca08bba09611e7e2e0ec3584c96
         run: |
           set -eu
           archive="magelift_${MAGELIFT_VERSION#v}_linux_amd64.tar.gz"
@@ -282,7 +282,7 @@ jobs:
           cosign-release: v3.1.3
       - name: Install MageLift
         env:
-          MAGELIFT_VERSION: v0.0.0-canary.3659aa34533066b37d5bbd5a49b77bd083723647
+          MAGELIFT_VERSION: v0.0.0-canary.94a9c57f04eddca08bba09611e7e2e0ec3584c96
         run: |
           set -eu
           archive="magelift_${MAGELIFT_VERSION#v}_linux_amd64.tar.gz"
