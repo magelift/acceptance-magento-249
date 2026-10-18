@@ -372,4 +372,20 @@ jobs:
       - name: Deploy immutable digest
         env:
           DIGEST: ${{ needs.build.outputs.digest }}
-        run: magelift --config 'magelift.acceptance.yaml' --env test --no-interaction --yes deploy --digest "$DIGEST"
+        run: |
+          python3 - <<'PY_DIGEST'
+          import json, os, re
+          from pathlib import Path
+          digest = os.environ["DIGEST"]
+          if not re.fullmatch(r"[^@\s]+@sha256:[a-f0-9]{64}", digest):
+              raise SystemExit("immutable digest is required")
+          path = Path("magelift.acceptance.yaml")
+          value = path.read_text()
+          anchor = "  gcp:\n"
+          if value.count(anchor) != 1 or "    imageDigest:" in value:
+              raise SystemExit("unexpected acceptance GCP configuration")
+          # This canary plans before applying --digest. Pin the existing target field first.
+          value = value.replace(anchor, anchor + "    imageDigest: " + json.dumps(digest) + "\n", 1)
+          path.write_text(value)
+          PY_DIGEST
+          magelift --config 'magelift.acceptance.yaml' --env test --no-interaction --yes deploy --digest "$DIGEST"
