@@ -2,10 +2,13 @@ name: MageLift CI
 
 # target: gcp/gke-autopilot
 
+# Push deploy is off after the retained community-alpha campaign.
+# Pull requests still validate. To deploy again, restore
+# `push: branches: [main]` below, or run this workflow with workflow_dispatch.
+# A dispatch builds and deploys; do not dispatch against a destroyed stack
+# unless recreation is intended.
 on:
   pull_request:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
