@@ -23,7 +23,6 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Materialize acceptance target
-        if: github.event_name != 'pull_request'
         env:
           MAGELIFT_ACCEPTANCE_CONFIG: ${{ vars.MAGELIFT_ACCEPTANCE_CONFIG }}
         run: |
@@ -31,9 +30,11 @@ jobs:
           import os
           from pathlib import Path
           value = os.environ["MAGELIFT_ACCEPTANCE_CONFIG"]
-          if not value.strip():
+          if os.environ["GITHUB_EVENT_NAME"] == "pull_request":
+              value = Path("magelift.yaml").read_text()
+          elif not value.strip():
               raise SystemExit("MAGELIFT_ACCEPTANCE_CONFIG is required for acceptance")
-          Path("magelift.yaml").write_text(value)
+          Path("magelift.acceptance.yaml").write_text(value)
           PY_CONFIG
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
         with:
@@ -58,9 +59,9 @@ jobs:
       - name: Install MageLift provider
         run: magelift providers install
       - name: Validate configuration
-        run: magelift --config 'magelift.yaml' --no-interaction config validate
+        run: magelift --config 'magelift.acceptance.yaml' --no-interaction config validate
       - name: Resolve environment
-        run: magelift --config 'magelift.yaml' --env "${{ matrix.environment }}" --no-interaction --output json config effective > /dev/null
+        run: magelift --config 'magelift.acceptance.yaml' --env "${{ matrix.environment }}" --no-interaction --output json config effective > /dev/null
 
   build:
     name: Build and sign immutable image
@@ -80,7 +81,6 @@ jobs:
         with:
           persist-credentials: false
       - name: Materialize acceptance target
-        if: github.event_name != 'pull_request'
         env:
           MAGELIFT_ACCEPTANCE_CONFIG: ${{ vars.MAGELIFT_ACCEPTANCE_CONFIG }}
         run: |
@@ -88,9 +88,11 @@ jobs:
           import os
           from pathlib import Path
           value = os.environ["MAGELIFT_ACCEPTANCE_CONFIG"]
-          if not value.strip():
+          if os.environ["GITHUB_EVENT_NAME"] == "pull_request":
+              value = Path("magelift.yaml").read_text()
+          elif not value.strip():
               raise SystemExit("MAGELIFT_ACCEPTANCE_CONFIG is required for acceptance")
-          Path("magelift.yaml").write_text(value)
+          Path("magelift.acceptance.yaml").write_text(value)
           PY_CONFIG
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         with:
@@ -214,13 +216,13 @@ jobs:
         run: |
           set -eu
           test -n "$MAGELIFT_RELEASE_IMAGE"
-          magelift --config 'magelift.yaml' --no-interaction --output json build --push \
-            --image "$MAGELIFT_RELEASE_IMAGE" > build-result.json
-          digest="$(jq -er '.image.imageReference + "@" + .image.digest' build-result.json)"
           mkdir -p "$RUNNER_TEMP/magelift-build"
-          cp build-result.json "$RUNNER_TEMP/magelift-build/"
-          cp -- "$(jq -er '.manifest' build-result.json)" "$RUNNER_TEMP/magelift-build/manifest.json"
-          checksum="$(jq -er '.manifestSha256 | select(test("^[a-f0-9]{64}$"))' build-result.json)"
+          result="$RUNNER_TEMP/magelift-build/build-result.json"
+          magelift --config 'magelift.acceptance.yaml' --no-interaction --output json build --push \
+            --image "$MAGELIFT_RELEASE_IMAGE" > "$result"
+          digest="$(jq -er '.image.imageReference + "@" + .image.digest' "$result")"
+          cp -- "$(jq -er '.manifest' "$result")" "$RUNNER_TEMP/magelift-build/manifest.json"
+          checksum="$(jq -er '.manifestSha256 | select(test("^[a-f0-9]{64}$"))' "$result")"
           printf '%s  manifest.json\n' "$checksum" > "$RUNNER_TEMP/magelift-build/manifest.sha256"
           (cd "$RUNNER_TEMP/magelift-build" && sha256sum -c manifest.sha256)
           printf 'digest=%s\n' "$digest" >> "$GITHUB_OUTPUT"
@@ -250,7 +252,6 @@ jobs:
         with:
           persist-credentials: false
       - name: Materialize acceptance target
-        if: github.event_name != 'pull_request'
         env:
           MAGELIFT_ACCEPTANCE_CONFIG: ${{ vars.MAGELIFT_ACCEPTANCE_CONFIG }}
         run: |
@@ -258,9 +259,11 @@ jobs:
           import os
           from pathlib import Path
           value = os.environ["MAGELIFT_ACCEPTANCE_CONFIG"]
-          if not value.strip():
+          if os.environ["GITHUB_EVENT_NAME"] == "pull_request":
+              value = Path("magelift.yaml").read_text()
+          elif not value.strip():
               raise SystemExit("MAGELIFT_ACCEPTANCE_CONFIG is required for acceptance")
-          Path("magelift.yaml").write_text(value)
+          Path("magelift.acceptance.yaml").write_text(value)
           PY_CONFIG
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
         with:
@@ -293,7 +296,7 @@ jobs:
         run: |
           set -eu
           test -n "$GCP_PROJECT_ID"
-          configured_project="$(magelift --config magelift.yaml --env test --output json config effective | python3 -c 'import json,sys; print(json.load(sys.stdin)["config"]["target"]["gcp"]["project"])')"
+          configured_project="$(magelift --config magelift.acceptance.yaml --env test --output json config effective | python3 -c 'import json,sys; print(json.load(sys.stdin)["config"]["target"]["gcp"]["project"])')"
           test "$GCP_PROJECT_ID" = "$configured_project"
           test -n "$GCP_REGION"
           test "$GCP_REGION" = 'us-central1'
@@ -361,4 +364,4 @@ jobs:
       - name: Deploy immutable digest
         env:
           DIGEST: ${{ needs.build.outputs.digest }}
-        run: magelift --config 'magelift.yaml' --env test --no-interaction --yes deploy --digest "$DIGEST"
+        run: magelift --config 'magelift.acceptance.yaml' --env test --no-interaction --yes deploy --digest "$DIGEST"

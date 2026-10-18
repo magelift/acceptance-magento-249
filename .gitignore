@@ -83,3 +83,5 @@ atlassian*
 /credentials.json
 /service-account*.json
 /*-credentials.json
+
+/magelift.acceptance.yaml

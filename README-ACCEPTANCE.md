@@ -40,9 +40,11 @@ Upstream copyrights, `LICENSE*`, and `COPYING.txt` are unchanged. See also
 [.magelift-acceptance.md](.magelift-acceptance.md).
 
 The workflow starts from the CLI-generated single-test recipe. Fixture-only
-customization materializes target YAML after checkout and compares the configured
+customization materializes target YAML into ignored magelift.acceptance.yaml after checkout and compares the configured
 GCP project with its repository variable. Its build condition also corrects an
 undefined dispatch input in this canary's test-only generator; the source fix is
 committed separately. Pull requests validate placeholder configuration and cannot
 run the build or deploy jobs. Cloud trust accepts only this repository's main
 workflow and its build/test environments.
+
+Build results are written under RUNNER_TEMP, keeping the committed source clean. The tracked placeholder YAML is never rewritten during CI.
