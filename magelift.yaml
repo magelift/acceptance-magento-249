@@ -1,0 +1,30 @@
+schemaVersion: 1
+project:
+  name: "magelift-org249-ec2a332"
+application:
+  edition: open-source
+  version: 2.4.9
+  mode: integrated
+  webRuntime: nginx-fpm
+  magento:
+    frontName: admin
+build:
+  php: "8.5"
+  staticContent:
+    locales: [en_US]
+    themes: [Magento/luma]
+target:
+  provider: gcp
+  runtime: gke-autopilot
+  gcp:
+    project: example-gcp-project
+    region: us-central1
+defaults:
+  region: us-central1
+  preset: preview
+environments:
+  test:
+    class: staging
+    preset: preview
+    domain: shop.example.com
+extensions: {}
