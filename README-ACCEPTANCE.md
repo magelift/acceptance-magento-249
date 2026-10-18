@@ -9,6 +9,8 @@ baseline: [magento/magento2 tag 2.4.9](https://github.com/magento/magento2/tree/
 
 | Check | Status |
 | --- | --- |
+| Signed CLI/provider installation without host Go/PHP/Node | PASS |
+| GCP bootstrap and reviewed CI IAM application | PASS |
 | Cloud deploy / destroy (GCP) | **NOT_RUN** |
 | Composer `install` in CI | expected in fixture pipelines |
 | Magento functional tests | **NOT_RUN** in this tree |
@@ -36,3 +38,11 @@ for runs (workflows are added separately).
 
 Upstream copyrights, `LICENSE*`, and `COPYING.txt` are unchanged. See also
 [.magelift-acceptance.md](.magelift-acceptance.md).
+
+The workflow starts from the CLI-generated single-test recipe. Fixture-only
+customization materializes target YAML after checkout and compares the configured
+GCP project with its repository variable. Its build condition also corrects an
+undefined dispatch input in this canary's test-only generator; the source fix is
+committed separately. Pull requests validate placeholder configuration and cannot
+run the build or deploy jobs. Cloud trust accepts only this repository's main
+workflow and its build/test environments.
